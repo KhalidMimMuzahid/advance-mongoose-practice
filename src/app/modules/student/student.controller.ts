@@ -1,8 +1,21 @@
 import { Request, Response } from 'express';
 import { StudentService } from './student.service';
+import studentValidationSchema from './student.validationByJoi';
 const createStudent = async (req: Request, res: Response) => {
   try {
     const { student: studentData } = req.body;
+    // const { error, value } = studentValidationSchema.validate(studentData);
+    const { error } = studentValidationSchema.validate(studentData);
+    // console.log({ error }, { value });
+
+    if (error) {
+      res.status(400).json({
+        success: false,
+        message: 'Something went wrong',
+        error: error.details,
+      });
+    }
+
     // will call service function to send the data
     const result = await StudentService.createStudentIntoDB(studentData);
 
@@ -13,11 +26,11 @@ const createStudent = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    // res.status(400).json({
-    //   success: false,
-    //   message: 'Student could not be created',
-    // });
-    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: 'Something went wrong',
+      error: error,
+    });
   }
 };
 
@@ -31,7 +44,11 @@ const getAllStudents = async (req: Request, res: Response) => {
       data: results,
     });
   } catch (error) {
-    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: 'Something went wrong',
+      error: error,
+    });
   }
 };
 
@@ -46,7 +63,11 @@ const getSingleSTudent = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: 'Something went wrong',
+      error: error,
+    });
   }
 };
 export const studentControllers = {
