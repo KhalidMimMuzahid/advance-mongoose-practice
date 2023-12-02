@@ -10,7 +10,6 @@ import {
   StudentModel,
 } from './student.interface';
 import config from '../../config';
-import { NextFunction } from 'express';
 
 // creating a schema
 
@@ -163,6 +162,16 @@ const studentSchema = new Schema<TStudent, StudentModel>({
     default: 'active',
     required: true,
   },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  }
+}, 
+//options
+{
+  toJSON: {
+    virtuals: true
+  }
 });
 
 // -----------------------xxxxxxxxxxxxxxxxx-----------------------
@@ -182,23 +191,57 @@ studentSchema.statics.isUserExists = async (id: string) => {
   const existingUser = Student.findOne({ id });
   return existingUser;
 };
-// -----------------------xxxxxxxxxxxxxxxxx-----------------------// middlewares
 
-// pre save middleware/hook : will work on create() or save()
+// -------------######################################-------------// virtual  --> virtually add new field
+studentSchema.virtual('fullName').get(function(){
+  return `${this.name.firstName} ${this.name.middleName} ${this.name.lastName}`
+})
+
+
+
+// -------------######################################-------------// middlewares
+
+// -------------**************************************------------- // Document middlewares
+// pre save middleware/hook : will work on create() or save() before saving
 studentSchema.pre('save', async function (next) {
-  console.log(this, 'pre hook: we will save the data');
+  // console.log(this, 'pre hook: we will save the data');
 
   // eslint-disable-next-line @typescript-eslint/no-this-alias
-  const user = this;
+  const user = this; // Here this keyword is referring the document
   //hashing password and save into DB
   user.password = await bcrypt.hash(user.password, Number(config.saltRound));
   next();
 });
 
-// post save middleware / hook
-studentSchema.post('save', function () {
-  console.log(this, 'post hook: we have saved the data');
+// post save middleware / hook : will work on create() or save() after saving
+studentSchema.post('save', function (doc, next) {
+  // console.log('post hook: we have saved the data');
+  doc.password = '';
+  next();
 });
-// -----------------------xxxxxxxxxxxxxxxxx-----------------------
+
+
+// -------------**************************************------------- // Query middlewares
+studentSchema.pre('find', function(next){
+// console.log("This is this: ",this)
+this.find({isDeleted: {$ne: true}})
+next()
+})
+studentSchema.pre('findOne', function(next){
+  this.findOne({isDeleted: {$ne: true}})
+  next()
+})
+studentSchema.pre('aggregate', function(next){
+
+  // console.log(this.pipeline())
+  this.pipeline().unshift({$match: {isDeleted: {$ne: true}}})
+  next()
+})
+
+
+
+
+
+// -------------######################################-------------// creating a model
 // creating a model
 export const Student = model<TStudent, StudentModel>('Student', studentSchema);
