@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-// import validator from 'validator';
+import bcrypt from 'bcrypt';
 import {
   TEmergencyContact,
   TGuardian,
@@ -9,6 +9,8 @@ import {
   TUserName,
   StudentModel,
 } from './student.interface';
+import config from '../../config';
+import { NextFunction } from 'express';
 
 // creating a schema
 
@@ -74,15 +76,13 @@ const emergencyContactSchema = new Schema<TEmergencyContact>({
   contactNo: { type: String, required: [true, 'contactNo is required'] },
 });
 
-
-
 // -----------------------xxxxxxxxxxxxxxxxx-----------------------
-// for creating instance method, schema will take 3 parameters like this, 
+// for creating instance method, schema will take 3 parameters like this,
 //  const studentSchema = new Schema<TStudent, StudentModel, StudentMethods>
 
 // -----------------------xxxxxxxxxxxxxxxxx-----------------------
 
-// for creating static method, schema will take 2 parameters like this, 
+// for creating static method, schema will take 2 parameters like this,
 //  const studentSchema = new Schema<TStudent, StudentModel>
 
 // -----------------------xxxxxxxxxxxxxxxxx-----------------------
@@ -91,6 +91,11 @@ const studentSchema = new Schema<TStudent, StudentModel>({
     type: String,
     required: true,
     unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+    maxlength: [20, "Password can't be more than 20 characters"],
   },
   name: {
     type: userNameSchema,
@@ -160,35 +165,40 @@ const studentSchema = new Schema<TStudent, StudentModel>({
   },
 });
 
-
-
-
 // -----------------------xxxxxxxxxxxxxxxxx-----------------------
-// // creating a custom instance method 
+// // creating a custom instance method
 // studentSchema.methods.isUserExists = async(id:string)=>{
 //   const existingUser= Student.findOne({ id})
-
-//   return existingUser 
+//   return existingUser
 // }
 // -----------------------xxxxxxxxxxxxxxxxx-----------------------
-
 // creating a custom static method
-
-
-
-
-
 // studentSchema.static('isUserExists', async function isUserExists (id:string) {
 //   const existingUser= Student.findOne({ id})
-
-//   return existingUser 
+//   return existingUser
 // });
 // // Or,
-studentSchema.statics.isUserExists = async(id:string)=>{
-  const existingUser= Student.findOne({ id})
+studentSchema.statics.isUserExists = async (id: string) => {
+  const existingUser = Student.findOne({ id });
+  return existingUser;
+};
+// -----------------------xxxxxxxxxxxxxxxxx-----------------------// middlewares
 
-  return existingUser 
-}
+// pre save middleware/hook : will work on create() or save()
+studentSchema.pre('save', async function (next) {
+  console.log(this, 'pre hook: we will save the data');
+
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
+  const user = this;
+  //hashing password and save into DB
+  user.password = await bcrypt.hash(user.password, Number(config.saltRound));
+  next();
+});
+
+// post save middleware / hook
+studentSchema.post('save', function () {
+  console.log(this, 'post hook: we have saved the data');
+});
 // -----------------------xxxxxxxxxxxxxxxxx-----------------------
 // creating a model
 export const Student = model<TStudent, StudentModel>('Student', studentSchema);

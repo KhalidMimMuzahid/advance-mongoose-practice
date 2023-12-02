@@ -31,6 +31,7 @@ export type TEmergencyContact = {
 };
 export interface TStudent {
   id: string;
+  password: string;
   name: TUserName;
   gender: 'Male' | 'Female' | 'Other';
   email: string;

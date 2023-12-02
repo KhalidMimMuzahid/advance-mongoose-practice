@@ -48,6 +48,7 @@ const emergencyContactValidationSchema = z.object({
 
 const studentValidationSchemaByZod = z.object({
   id: z.string().min(1),
+  password: z.string().max(20),
   name: userNameValidationSchema,
   gender: z.enum(['Male', 'Female', 'Other']),
   dateOfBirth: z.string().optional(),
