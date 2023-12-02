@@ -1,23 +1,38 @@
 import { Request, Response } from 'express';
 import { StudentService } from './student.service';
-import studentValidationSchema from './student.validationByJoi';
+
+
+// import { z } from "zod";
+import studentValidationSchemaByZod from './student.validationByZod';
+// import studentValidationSchemaByJoi from './student.validationByJoi';
 const createStudent = async (req: Request, res: Response) => {
   try {
     const { student: studentData } = req.body;
-    // const { error, value } = studentValidationSchema.validate(studentData);
-    const { error } = studentValidationSchema.validate(studentData);
-    // console.log({ error }, { value });
 
-    if (error) {
-      res.status(400).json({
-        success: false,
-        message: 'Something went wrong',
-        error: error.details,
-      });
-    }
+    // -----------------------xxxxxxxxxxxxxxxxx-----------------------
+    // // creating a schema validation using joi  starts here
+    // const  { error, value } = studentValidationSchemaByJoi.validate(studentData);
+    // // console.log({ error }, { value });
 
-    // will call service function to send the data
-    const result = await StudentService.createStudentIntoDB(studentData);
+    // if (error) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: 'Something went wrong',
+    //     error: error.details,
+    //   });
+    // }
+
+    // // will call service function to send the data after joi validation
+    // const result = await StudentService.createStudentIntoDB(value);
+    // // creating a schema validation using joi  ends here
+
+    // -----------------------xxxxxxxxxxxxxxxxx-----------------------
+
+    // // creating a schema validation using Zod
+
+    const ZodParseData = studentValidationSchemaByZod.parse(studentData);
+
+    const result = await StudentService.createStudentIntoDB(ZodParseData);
 
     // send response
     res.status(200).json({
@@ -25,10 +40,10 @@ const createStudent = async (req: Request, res: Response) => {
       message: 'Student created successfully',
       data: result,
     });
-  } catch (error) {
+  } catch (error: any) {
     res.status(400).json({
       success: false,
-      message: 'Something went wrong',
+      message: error?.message || 'Something went wrong',
       error: error,
     });
   }

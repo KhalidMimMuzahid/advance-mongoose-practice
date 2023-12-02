@@ -10,12 +10,19 @@ app.use(cors());
 // application routes
 app.use('/api/v1/students', studentRoutes);
 
+
+
+ 
+
+
+// this is for testing perpose  it starts from here 
 const getAController = (req: Request, res: Response) => {
   const a = 10;
   // res.send('Hello World!')
   res.send(a);
 };
 app.get('/', getAController);
+// this is for testing perpase  it ends from here 
 
 export default app;
 

@@ -1,29 +1,32 @@
 import { Schema, model } from 'mongoose';
-import validator from 'validator';
+// import validator from 'validator';
 import {
-  EmergencyContact,
-  Guardian,
-  LocalGuardian,
-  Student,
-  UserName,
+  TEmergencyContact,
+  TGuardian,
+  TLocalGuardian,
+  TStudent,
+  // StudentMethods,
+  TUserName,
+  StudentModel,
 } from './student.interface';
 
 // creating a schema
 
-const userNameSchema = new Schema<UserName>({
+const userNameSchema = new Schema<TUserName>({
   firstName: {
     type: String,
     required: [true, 'firstName is required'],
     maxLength: [20, 'first name can not be more than 20 characters'],
     trim: true,
-    validate: {
-      validator: function (value: string) {
-        const isFirstNameStrCapitalized =
-          value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-        return value === isFirstNameStrCapitalized;
-      },
-      message: '{VALUE} must be capitalized',
-    },
+    // we are using Joi/Zod; that's why we no need custoom validation here
+    // validate: {
+    //   validator: function (value: string) {
+    //     const isFirstNameStrCapitalized =
+    //       value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    //     return value === isFirstNameStrCapitalized;
+    //   },
+    //   message: '{VALUE} must be capitalized',
+    // },
   },
   middleName: {
     type: String,
@@ -33,13 +36,13 @@ const userNameSchema = new Schema<UserName>({
     type: String,
     required: [true, 'lastName is required'],
     trim: true,
-    validate: {
-      validator: (value: string) => validator.isAlpha(value),
-      message: '{VALUE} must be alpha character',
-    },
+    // validate: {
+    //   validator: (value: string) => validator.isAlpha(value),
+    //   message: '{VALUE} must be alpha character',
+    // },
   },
 });
-const guardianSchema = new Schema<Guardian>({
+const guardianSchema = new Schema<TGuardian>({
   father: {
     type: {
       fatherName: { type: String, required: true, trim: true },
@@ -55,14 +58,14 @@ const guardianSchema = new Schema<Guardian>({
     },
   },
 });
-const localGuardianSchema = new Schema<LocalGuardian>({
+const localGuardianSchema = new Schema<TLocalGuardian>({
   name: { type: String, required: true },
   occupation: { type: String, required: true },
   contactNo: { type: String, required: true },
   address: { type: String, required: true },
 });
 
-const emergencyContactSchema = new Schema<EmergencyContact>({
+const emergencyContactSchema = new Schema<TEmergencyContact>({
   relation: {
     type: String,
     enum: ['Father', 'Mother', 'Brother'],
@@ -71,7 +74,19 @@ const emergencyContactSchema = new Schema<EmergencyContact>({
   contactNo: { type: String, required: [true, 'contactNo is required'] },
 });
 
-const studentSchema = new Schema<Student>({
+
+
+// -----------------------xxxxxxxxxxxxxxxxx-----------------------
+// for creating instance method, schema will take 3 parameters like this, 
+//  const studentSchema = new Schema<TStudent, StudentModel, StudentMethods>
+
+// -----------------------xxxxxxxxxxxxxxxxx-----------------------
+
+// for creating static method, schema will take 2 parameters like this, 
+//  const studentSchema = new Schema<TStudent, StudentModel>
+
+// -----------------------xxxxxxxxxxxxxxxxx-----------------------
+const studentSchema = new Schema<TStudent, StudentModel>({
   id: {
     type: String,
     required: true,
@@ -96,10 +111,10 @@ const studentSchema = new Schema<Student>({
     type: String,
     required: [true, 'email is required'],
     unique: true,
-    validate: {
-      validator: (value: string) => validator.isEmail(value),
-      message: '{VALUE} must be a valid email address',
-    },
+    // validate: {
+    //   validator: (value: string) => validator.isEmail(value),
+    //   message: '{VALUE} must be a valid email address',
+    // },
   },
   contactNo: {
     type: String,
@@ -132,6 +147,7 @@ const studentSchema = new Schema<Student>({
   },
   localGuardian: {
     type: localGuardianSchema,
+    required: [true, 'local guardian is required'],
   },
   profileImage: {
     type: String,
@@ -144,5 +160,35 @@ const studentSchema = new Schema<Student>({
   },
 });
 
+
+
+
+// -----------------------xxxxxxxxxxxxxxxxx-----------------------
+// // creating a custom instance method 
+// studentSchema.methods.isUserExists = async(id:string)=>{
+//   const existingUser= Student.findOne({ id})
+
+//   return existingUser 
+// }
+// -----------------------xxxxxxxxxxxxxxxxx-----------------------
+
+// creating a custom static method
+
+
+
+
+
+// studentSchema.static('isUserExists', async function isUserExists (id:string) {
+//   const existingUser= Student.findOne({ id})
+
+//   return existingUser 
+// });
+// // Or,
+studentSchema.statics.isUserExists = async(id:string)=>{
+  const existingUser= Student.findOne({ id})
+
+  return existingUser 
+}
+// -----------------------xxxxxxxxxxxxxxxxx-----------------------
 // creating a model
-export const StudentModel = model<Student>('Student', studentSchema);
+export const Student = model<TStudent, StudentModel>('Student', studentSchema);

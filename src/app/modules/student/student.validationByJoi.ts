@@ -41,7 +41,7 @@ const emergencyContactValidationSchema = Joi.object({
   contactNo: Joi.string().required(),
 });
 
-const studentValidationSchema = Joi.object({
+const studentValidationSchemaByJoi = Joi.object({
   id: Joi.string().required(),
   name: userNameValidationSchema.required(),
   gender: Joi.string().valid('Male', 'Female', 'Other').required(),
@@ -60,4 +60,4 @@ const studentValidationSchema = Joi.object({
   isActive: Joi.string().valid('active', 'blocked').required(),
 });
 
-export default studentValidationSchema;
+export default studentValidationSchemaByJoi;
